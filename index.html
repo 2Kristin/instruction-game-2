@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Follow the Steps - Multi Instructions</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f2f2f2;
+      padding: 20px;
+      text-align: center;
+    }
+    h1 {
+      color: #333;
+    }
+    .card {
+      display: inline-block;
+      background-color: white;
+      border: 2px solid #ddd;
+      border-radius: 10px;
+      padding: 15px;
+      margin: 10px;
+      cursor: grab;
+      user-select: none;
+      width: 220px;
+    }
+    .container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 20px;
+    }
+    #ordered {
+      margin-top: 40px;
+    }
+    .dropzone {
+      border: 2px dashed #aaa;
+      padding: 15px;
+      min-width: 240px;
+      min-height: 80px;
+      margin: 10px auto;
+      background-color: #fefefe;
+    }
+    button, select {
+      margin-top: 30px;
+      padding: 10px 20px;
+      font-size: 16px;
+    }
+    .correct {
+      background-color: #c8f7c5;
+    }
+    .incorrect {
+      background-color: #f7c5c5;
+    }
+  </style>
+</head>
+<body>
+  <h1>🧩 Follow the Steps!</h1>
+  <p>Select a topic and drag the steps into the correct order.</p>
+
+  <select id="topic-select" onchange="loadSteps()">
+    <option value="noodles">How to Make Instant Noodles</option>
+    <option value="teeth">How to Brush Your Teeth</option>
+    <option value="tea">How to Make a Cup of Tea</option>
+    <option value="hands">How to Wash Your Hands</option>
+    <option value="computer">How to Use a Computer</option>
+  </select>
+
+  <!-- Sound effect -->
+  <audio id="drag-sound">
+    <source src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_1b78c7f763.mp3?filename=click-124467.mp3" type="audio/mpeg">
+  </audio>
+
+  <div class="container" id="shuffle"></div>
+
+  <h2>🧪 Arrange Here:</h2>
+  <div id="ordered" class="container">
+    <div class="dropzone"></div>
+    <div class="dropzone"></div>
+    <div class="dropzone"></div>
+    <div class="dropzone"></div>
+    <div class="dropzone"></div>
+  </div>
+
+  <button onclick="checkOrder()">✅ Check Answer</button>
+  <p id="result"></p>
+
+  <script>
+    const stepsData = {
+      noodles: [
+        "Boil water in a pot.",
+        "Put the noodles into the boiling water.",
+        "Add the seasoning and stir well.",
+        "Turn off the stove.",
+        "Serve the noodles in a bowl."
+      ],
+      teeth: [
+        "Wet your toothbrush.",
+        "Put toothpaste on the toothbrush.",
+        "Brush your teeth for two minutes.",
+        "Spit out the toothpaste.",
+        "Rinse your mouth with water."
+      ],
+      tea: [
+        "Boil some water.",
+        "Put a tea bag in the cup.",
+        "Pour the hot water into the cup.",
+        "Let it steep for a few minutes.",
+        "Remove the tea bag and enjoy."
+      ],
+      hands: [
+        "Wet your hands with water.",
+        "Apply enough soap.",
+        "Scrub your hands for 20 seconds.",
+        "Rinse your hands with clean water.",
+        "Dry your hands with a towel."
+      ],
+      computer: [
+        "Turn on the computer.",
+        "Wait for the system to boot up.",
+        "Enter your password if needed.",
+        "Open the application you need.",
+        "Shut down the computer properly after use."
+      ]
+    };
+
+    let dragged;
+    let currentSteps = [];
+
+    function loadSteps() {
+      const topic = document.getElementById('topic-select').value;
+      const steps = stepsData[topic];
+      currentSteps = steps;
+      const shuffled = [...steps].sort(() => 0.5 - Math.random());
+      const container = document.getElementById('shuffle');
+      container.innerHTML = '';
+      shuffled.forEach(text => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.draggable = true;
+        card.textContent = text;
+        card.addEventListener('dragstart', e => {
+          dragged = card;
+          document.getElementById('drag-sound').play();
+          setTimeout(() => card.style.display = 'none', 0);
+        });
+        card.addEventListener('dragend', () => {
+          dragged.style.display = 'inline-block';
+        });
+        container.appendChild(card);
+      });
+
+      document.querySelectorAll('.dropzone').forEach(zone => zone.innerHTML = '');
+      document.getElementById('result').textContent = '';
+    }
+
+    document.querySelectorAll('.dropzone').forEach(zone => {
+      zone.addEventListener('dragover', e => e.preventDefault());
+      zone.addEventListener('drop', e => {
+        e.preventDefault();
+        if (zone.children.length === 0 && dragged) {
+          zone.appendChild(dragged);
+        }
+      });
+    });
+
+    function checkOrder() {
+      const result = [];
+      document.querySelectorAll('.dropzone').forEach(zone => {
+        if (zone.firstChild) {
+          result.push(zone.firstChild.textContent);
+        } else {
+          result.push('');
+        }
+      });
+
+      let correct = true;
+      for (let i = 0; i < currentSteps.length; i++) {
+        const zone = document.querySelectorAll('.dropzone')[i];
+        if (result[i] !== currentSteps[i]) {
+          zone.classList.add('incorrect');
+          zone.classList.remove('correct');
+          correct = false;
+        } else {
+          zone.classList.add('correct');
+          zone.classList.remove('incorrect');
+        }
+      }
+
+      document.getElementById('result').textContent =
+        correct ? '🎉 Correct! Well done!' : '❌ Try again. Some steps are incorrect.';
+    }
+
+    window.onload = loadSteps;
+  </script>
+</body>
+</html>
